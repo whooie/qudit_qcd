@@ -1,0 +1,46 @@
+graph "qcd" {
+    graph [pad=0.5]
+
+    node [
+        fontname="Sans-Serif",
+        fontsize=20,
+        fontcolor="#000",
+        margin=0.0,
+        shape=circle,
+        style=filled,
+        fillcolor="#eee",
+        color="#aaa",
+        penwidth=2.0,
+    ];
+
+    edge [
+        fontname="Sans-Serif",
+        fontsize=16,
+        penwidth=3.5,
+    ];
+
+    "000" [label="000|ø"];
+    "010" [label="010|r"];
+    "100" [label="100|g"];
+    "110" [label="110|b"];
+    "001" [label="001|rg"];
+    "011" [label="011|rb"];
+    "101" [label="101|gb"];
+    "111" [label="111|rgb"];
+
+    // particle creation operations
+    "000" -- "010" [color="#f00", style="filled"];
+    "100" -- "001" [color="#f00", style="filled"];
+    "110" -- "011" [color="#f00", style="filled"];
+    "101" -- "111" [color="#f00", style="filled"];
+
+    "000" -- "100" [color="#0f0", style="filled"];
+    "010" -- "001" [color="#0f0", style="filled"];
+    "110" -- "101" [color="#0f0", style="filled"];
+    "011" -- "111" [color="#0f0", style="filled"];
+
+    "000" -- "110" [color="#00f", style="filled"];
+    "010" -- "011" [color="#00f", style="filled"];
+    "100" -- "101" [color="#00f", style="filled"];
+    "001" -- "111" [color="#00f", style="filled"];
+}

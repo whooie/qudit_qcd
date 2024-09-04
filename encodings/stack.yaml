@@ -1,0 +1,7 @@
+notify-if-nix-on-path: false
+resolver: lts-22.21
+packages:
+  - .
+extra-deps: []
+flags: {}
+system-ghc: no

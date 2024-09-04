@@ -1,0 +1,72 @@
+graph "qcd" {
+    graph [pad=0.5]
+
+    node [
+        fontname="Sans-Serif",
+        fontsize=20,
+        fontcolor="#000",
+        margin=0.0,
+        shape=circle,
+        style=filled,
+        fillcolor="#eee",
+        color="#aaa",
+        penwidth=2.0,
+    ];
+
+    edge [
+        fontname="Sans-Serif",
+        fontsize=16,
+        penwidth=3.5,
+    ];
+
+    "000" [label="000|ø"];
+    "010" [label="010|r"];
+    "100" [label="100|g"];
+    "110" [label="110|b"];
+    "001" [label="001|rg"];
+    "011" [label="011|rb"];
+    "101" [label="101|gb"];
+    "111" [label="111|rgb"];
+
+    // implementable non-controlled quoct operations
+
+    // e
+    "000" -- "100" [label="e(π)", color="#ffbc4d", fontcolor="#ffbc4d"]
+    "010" -- "110" [label="e(π)", color="#ffbc4d", fontcolor="#ffbc4d"]
+    "001" -- "101" [label="e(π)", color="#ffbc4d", fontcolor="#ffbc4d"]
+    "011" -- "111" [label="e(π)", color="#ffbc4d", fontcolor="#ffbc4d"]
+
+    // n
+    "000" -- "010" [label="n(π)", color="#ff774d", fontcolor="#ff774d"]
+    "100" -- "110" [label="n(π)", color="#ff774d", fontcolor="#ff774d"]
+    "001" -- "011" [label="n(π)", color="#ff774d", fontcolor="#ff774d"]
+    "101" -- "111" [label="n(π)", color="#ff774d", fontcolor="#ff774d"]
+
+    // m
+    "000" -- "001" [label="m(π)", color="#7eacce", fontcolor="#7eacce"]
+    "010" -- "011" [label="m(π)", color="#7eacce", fontcolor="#7eacce"]
+    "100" -- "101" [label="m(π)", color="#7eacce", fontcolor="#7eacce"]
+    "110" -- "111" [label="m(π)", color="#7eacce", fontcolor="#7eacce"]
+
+    // e <-> n
+    "010" -- "100" [label="e↔n", style="dashed"] 
+    "011" -- "101" [label="e↔n", style="dashed"] 
+
+    // en
+    "000" -- "110" [label="en(π)"]
+    "001" -- "111" [label="en(π)"]
+
+    // e <-> m
+    "100" -- "001" [label="e↔m", style="dashed", color="#aaa", fontcolor="#aaa"]
+    "110" -- "011" [label="e↔m", style="dashed", color="#aaa", fontcolor="#aaa"]
+
+    // em
+    "000" -- "101" [label="em(π)", color="#aaa", fontcolor="#aaa"]
+    "010" -- "111" [label="em(π)", color="#aaa", fontcolor="#aaa"]
+
+    // en<->m
+    "001" -- "110" [label="en↔m", style="dashed", color="#bf7878", fontcolor="#bf7878"]
+
+    // e<->nm
+    "100" -- "011" [label="e↔nm", style="dashed", color="#7e2f8e", fontcolor="#7e2f8e"]
+}
