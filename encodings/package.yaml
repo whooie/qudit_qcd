@@ -1,4 +1,4 @@
-name: connectivity
+name: encodings
 
 version: 0.1.0
 
@@ -18,6 +18,8 @@ dependencies:
   - base >= 4.7 && < 5
   - bimap >= 0.5
   - graphviz >= 2999.20.2
+  - mtl >= 2.3.1
+  - random >= 1.2
   - text >= 1.2
 
 ghc-options:
@@ -51,9 +53,17 @@ library:
 executables:
   main:
     main: Main.hs
-    source-dirs: src
+    source-dirs: src/Main
     ghc-options:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
-    dependencies: connectivity
+    dependencies: encodings
+  optim:
+    main: Main.hs
+    source-dirs: src/Optim
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies: encodings

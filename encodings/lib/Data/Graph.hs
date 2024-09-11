@@ -8,13 +8,24 @@ module Data.Graph
   , spanTree
   , findPath
   , findPathT
+  , Encoding (..)
+  , newEnc
+  , revEnc
+  , (!!>)
+  , getR
+  , (<!!)
+  , getL
+  , encToList
+  , evalEnc
   , AttrFs (..)
-  , toGraphviz
-  , renderGraphviz
+  , toDot
+  , toDotE
+  , renderDot
   ) where
 
 import Data.Function ((&))
-import Data.List (find, sortOn)
+import Data.List (sortOn)
+import qualified Data.Bimap as B
 import qualified Data.GraphViz as G
 import qualified Data.GraphViz.Attributes.Complete as A
 import qualified Data.GraphViz.Printing as P
@@ -36,14 +47,23 @@ filterMap pred (h : t) =
 -- * `neighbors`, `edges`, and `edgeTo` must give consistent results: If for any
 --   nodes @a@ and @b@ we have @edgeTo a b == Just w@, then we must also have
 --   @(b, w) \`elem\` neighbors a@, and vice versa.
-class Eq n => Graph n g where
+class (Eq n, Ord n) => Graph n g | g -> n where
   {-# MINIMAL nodesL, (neighborsL | edgesL) #-}
   -- | Return a list of all nodes in the graph with string labels.
+  --
+  -- The returned list must have fixed order.
   nodesL :: g -> [(n, String)]
 
   -- | Return a list of all nodes in the graph.
+  --
+  -- The returned list must have fixed order.
   nodes :: g -> [n]
   nodes graph = nodesL graph & map fst
+
+  -- | Return the label associated with a node, if it exists.
+  nodeL :: g -> n -> Maybe String
+  nodeL graph a =
+    nodesL graph & findMap (\(n, l) -> if n == a then Just l else Nothing)
 
   -- | Return a list of the neighbors of a given node with string labels.
   neighborsL :: g -> n -> [(n, Float, String)]
@@ -51,8 +71,10 @@ class Eq n => Graph n g where
     edgesL graph
     & filterMap edgesLFrom
     where edgesLFrom ((n, n'), w, l) =
-            if n == a then Just (n', w, l)
-            else if n' == a then Just (n, w, l)
+            if n == a
+            then Just (n', w, l)
+            else if n' == a
+            then Just (n, w, l)
             else Nothing
 
   -- | Return a list of the neighbors of a given node.
@@ -79,15 +101,13 @@ class Eq n => Graph n g where
   edgeToL :: g -> n -> n -> Maybe (Float, String)
   edgeToL graph a b =
     neighborsL graph a
-    & find (\(n, _, _) -> n == b)
-    & fmap (\(_, w, l) -> (w, l))
+    & findMap (\(n, w, l) -> if n == b then Just (w, l) else Nothing)
 
   -- | Return the weight on the edge between two nodes, if it exists.
   edgeTo :: g -> n -> n -> Maybe Float
   edgeTo graph a b =
     neighbors graph a
-    & find (\(n, _) -> n == b)
-    & fmap snd
+    & findMap (\(n, w) -> if n == b then Just w else Nothing)
 
 -- | A minimum spanning tree for (possibly a sub-) graph.
 --
@@ -173,55 +193,166 @@ findPathT graph a b = findPath graph a b & fmap pathproc
           where path = map fst pathweights
                 weights = map snd pathweights
 
+-- | One-to-one encoding between types @a@ and @b@.
+newtype Encoding a b = Enc (B.Bimap a b)
+
+-- | Create a new @a@-@b@ encoding from a list of pairs.
+newEnc :: (Ord a, Ord b) =>  [(a, b)] -> Encoding a b
+newEnc = Enc . B.fromList
+
+-- | Reverse an existing encoding.
+revEnc :: Encoding a b -> Encoding b a
+revEnc (Enc enc) = Enc $ B.twist enc
+
+-- | Find the right key associated with a given left key, throwing an error if
+-- the pair doesn't exist.
+--
+-- See also `getR`.
+(!!>) :: (Ord a, Ord b) => Encoding a b -> a -> b
+(Enc enc) !!> a = enc B.! a
+
+-- | Find the right key associated with a given left key, if it exists.
+getR :: (Ord a, Ord b) => a -> Encoding a b -> Maybe b
+getR l (Enc enc) = B.lookup l enc
+
+-- | Find the left key associated with a given right key, throwing an error if
+-- the pair doesn't exist.
+--
+-- See also `getL`.
+(<!!) :: (Ord a, Ord b) => Encoding a b -> b -> a
+(Enc enc) <!! b = enc B.!> b
+
+-- | Find the left key associated with a given right key, if it exists.
+getL :: (Ord a, Ord b) => b -> Encoding a b -> Maybe a
+getL r (Enc enc) = B.lookupR r enc
+
+-- | Convert 
+encToList :: Encoding a b -> [(a, b)]
+encToList (Enc enc) = B.toList enc
+
+foldMaybe :: (b -> a -> b) -> Maybe b -> [Maybe a] -> Maybe b
+foldMaybe _ Nothing _ = Nothing
+foldMaybe _ _ (Nothing : _) = Nothing
+foldMaybe _ x0 [] = x0
+foldMaybe f (Just x) ((Just y) : t) = foldMaybe f (Just (f x y)) t
+
+-- | Evaluate a node encoding to a single total score.
+--
+-- This finds shortest paths in the second graph for each edge in the first and
+-- sums over total weights. If a path in the second graph cannot be found for an
+-- edge in the first, the evaluation is considered invalid and @Nothing@ is
+-- returned.
+evalEnc :: (Graph a g, Graph b h) => g -> h -> Encoding a b -> Maybe Float
+evalEnc graphA graphB enc =
+  edges graphA
+  & map (\((n, n'), _) -> findPathT graphB (enc !!> n) (enc !!> n') & fmap snd)
+  & foldMaybe (+) (Just 0)
+
 -- | Add rendering attributes to nodes and edges.
-data AttrFs n = AttrFs { nodeAttrs :: ((n, String) -> A.Attributes)
-                       , edgeAttrs :: ((n, n, String) -> A.Attributes)
-                       }
+data AttrFs n = AttrFs
+  { nodeAttrs :: ((n, String) -> A.Attributes)
+  , edgeAttrs :: ((n, n, String) -> A.Attributes)
+  }
+
+black :: A.Color
+black = A.RGB { A.red = 0, A.green = 0, A.blue = 0 }
+
+gray :: A.Color
+gray = A.RGB { A.red = 224, A.green = 224, A.blue = 224 }
+
+darkGray :: A.Color
+darkGray = A.RGB { A.red = 160, A.green = 160, A.blue = 160 }
+
+globs :: [G.GlobalAttributes]
+globs =
+  [ G.GraphAttrs { G.attrs = [ A.Pad $ A.DVal 0.5 ] }
+  , G.NodeAttrs
+    { G.attrs =
+      [ A.FontName $ T.pack "Sans-Serif"
+      , A.FontSize 20.0
+      , A.FontColor black
+      , A.Margin $ A.DVal 0
+      , A.Shape A.Circle
+      , A.Style [A.SItem A.Filled []]
+      , A.FillColor [A.toWC gray]
+      , A.Color [A.toWC darkGray]
+      , A.PenWidth 2.0
+      ]
+    }
+  , G.EdgeAttrs
+    { G.attrs =
+      [ A.FontName $ T.pack "Sans-Serif"
+      , A.FontSize 16.0
+      , A.PenWidth 3.5
+      ] 
+    }
+  ]
 
 -- | Convert a `Graph` to a GraphViz/Dot representation.
 --
--- See also `renderGraphviz`.
-toGraphviz :: (Graph n g, Ord n) => AttrFs n -> g -> G.DotGraph n
-toGraphviz attrs graph = G.graphElemsToDot params gNodes gEdges
-  where black = A.RGB { A.red = 0, A.green = 0, A.blue = 0 }
-        gray = A.RGB { A.red = 224, A.green = 224, A.blue = 224 }
-        darkGray = A.RGB { A.red = 160, A.green = 160, A.blue = 160 }
-        gNodes = nodesL graph
-        gEdges = edgesL graph & map (\((n, n'), _, l) -> (n, n', l))
-        globs =
-          [ G.GraphAttrs { G.attrs = [ A.Pad $ A.DVal 0.5 ] }
-          , G.NodeAttrs { G.attrs =
-                            [ A.FontName $ T.pack "Sans-Serif"
-                            , A.FontSize 20.0
-                            , A.FontColor black
-                            , A.Shape A.Circle
-                            , A.Style [A.SItem A.Filled []]
-                            , A.FillColor [A.toWC gray]
-                            , A.Color [A.toWC darkGray]
-                            , A.PenWidth 2.0
-                            ]
-                        }
-          , G.EdgeAttrs { G.attrs =
-                            [ A.FontName $ T.pack "Sans-Serif"
-                            , A.FontSize 16.0
-                            , A.PenWidth 3.5
-                            ] 
-                        }
-          ]
-        AttrFs { nodeAttrs, edgeAttrs } = attrs
-        nodeAttrs' (n, l) =
-          (A.Label $ A.StrLabel $ T.pack l) : nodeAttrs (n, l)
-        edgeAttrs' (n, n', l) =
-          (A.Label $ A.StrLabel $ T.pack l) : edgeAttrs (n, n', l)
-        params =
-          G.nonClusteredParams
-            { G.isDirected = False
-            , G.globalAttributes = globs
-            , G.fmtNode = nodeAttrs'
-            , G.fmtEdge = edgeAttrs'
-            }
+-- See also `renderDot`.
+toDot :: (Graph n g) => AttrFs n -> g -> G.DotGraph n
+toDot attrs graph =
+  G.setIsDirected False $ G.graphElemsToDot params gNodes gEdges
+    where gNodes = nodesL graph
+          gEdges = edgesL graph & map (\((n, n'), _, l) -> (n, n', l))
+          AttrFs { nodeAttrs, edgeAttrs } = attrs
+          nodeAttrs' (n, l) =
+            (A.Label $ A.StrLabel $ T.pack l) : nodeAttrs (n, l)
+          edgeAttrs' (n, n', l) =
+            (A.Label $ A.StrLabel $ T.pack l) : edgeAttrs (n, n', l)
+          params =
+            G.nonClusteredParams
+              { G.isDirected = True
+              , G.globalAttributes = globs
+              , G.fmtNode = nodeAttrs'
+              , G.fmtEdge = edgeAttrs'
+              }
+
+unwrap :: Maybe a -> a
+unwrap (Just x) = x
+unwrap Nothing  = error "called `unwrap` on a `Nothing`"
+
+-- | Convert a primary `Graph` to a GraphViz/Dot representation, augmenting node
+-- labels and edges with an `Encoding` to a secondary graph.
+--
+-- Attributes on nodes and edges from the secondary graph will be overwritten by
+-- those from the primary graph.
+toDotE :: (Graph a g, Graph b h) =>
+  AttrFs a -> g -> Encoding a b -> AttrFs b -> h -> G.DotGraph a
+toDotE attrsA graphA enc attrsB graphB =
+  G.setIsDirected False $ G.graphElemsToDot params gNodes gEdges
+    where AttrFs { nodeAttrs = nodeAttrsA, edgeAttrs = edgeAttrsA } = attrsA
+          AttrFs { nodeAttrs = nodeAttrsB, edgeAttrs = edgeAttrsB } = attrsB
+          gNodes =
+            nodesL graphA
+            & map (\(n, l) -> (n, (l, unwrap $ nodeL graphB $ enc !!> n)))
+          edgesA =
+            edgesL graphA
+            & map (\((n, n'), _, l) -> (n, n', Left l))
+          edgesB =
+            edgesL graphB
+            & map (\((n, n'), _, l) -> (enc <!! n, enc <!! n', Right l))
+          gEdges = edgesA ++ edgesB
+          nodeAttrs' (n, (l, l')) = (label : bAttrs) ++ aAttrs
+            where label = A.Label $ A.StrLabel $ T.pack (l ++ " | " ++ l')
+                  aAttrs = nodeAttrsA (n, l)
+                  bAttrs = nodeAttrsB (enc !!> n, l')
+          edgeAttrs' (n, n', Left l) = label : attrs
+            where label = A.Label $ A.StrLabel $ T.pack l
+                  attrs = edgeAttrsA (n, n', l)
+          edgeAttrs' (n, n', Right l) = label : attrs
+            where label = A.Label $ A.StrLabel $ T.pack l
+                  attrs = edgeAttrsB (enc !!> n, enc !!> n', l)
+          params =
+            G.nonClusteredParams
+              { G.isDirected = True
+              , G.globalAttributes = globs
+              , G.fmtNode = nodeAttrs'
+              , G.fmtEdge = edgeAttrs'
+              }
 
 -- | Render a GraphViz/Dot representation to a bare string.
-renderGraphviz :: G.PrintDot n => G.DotGraph n -> String
-renderGraphviz = T.unpack . P.renderDot . G.toDot
+renderDot :: G.PrintDot n => G.DotGraph n -> String
+renderDot = T.unpack . P.renderDot . G.toDot
 

@@ -1,0 +1,137 @@
+graph {
+    graph [pad=0.5];
+    node [fontname="Sans-Serif"
+         ,fontsize=20
+         ,fontcolor="#000000"
+         ,margin=0
+         ,shape=circle
+         ,style=filled
+         ,fillcolor="#e0e0e0"
+         ,color="#a0a0a0"
+         ,penwidth=2];
+    edge [fontname="Sans-Serif"
+         ,fontsize=16
+         ,penwidth=3.5];
+    Q000 [label=000];
+    Q010 [label=010];
+    Q100 [label=100];
+    Q110 [label=110];
+    Q001 [label=001];
+    Q011 [label=011];
+    Q101 [label=101];
+    Q111 [label=111];
+    Q000 -- Q100 [label=¬e
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q010 -- Q110 [label=¬e
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q001 -- Q101 [label=¬e
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q011 -- Q111 [label=¬e
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q000 -- Q010 [label=¬n
+                 ,color="#ff4d4c"
+                 ,fontcolor="#ff4d4c"];
+    Q100 -- Q110 [label=¬n
+                 ,color="#ff4d4c"
+                 ,fontcolor="#ff4d4c"];
+    Q001 -- Q011 [label=¬n
+                 ,color="#ff4d4c"
+                 ,fontcolor="#ff4d4c"];
+    Q101 -- Q111 [label=¬n
+                 ,color="#ff4d4c"
+                 ,fontcolor="#ff4d4c"];
+    Q000 -- Q001 [label=¬m
+                 ,color="#7eacce"
+                 ,fontcolor="#7eacce"];
+    Q010 -- Q011 [label=¬m
+                 ,color="#7eacce"
+                 ,fontcolor="#7eacce"];
+    Q100 -- Q101 [label=¬m
+                 ,color="#7eacce"
+                 ,fontcolor="#7eacce"];
+    Q110 -- Q111 [label=¬m
+                 ,color="#7eacce"
+                 ,fontcolor="#7eacce"];
+    Q000 -- Q110 [label=¬en
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q001 -- Q111 [label=¬en
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q010 -- Q100 [label="e ↔ n"
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q011 -- Q101 [label="e ↔ n"
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q000 -- Q101 [label=¬em
+                 ,color="#a0a0a0"
+                 ,fontcolor="#a0a0a0"];
+    Q010 -- Q111 [label=¬em
+                 ,color="#a0a0a0"
+                 ,fontcolor="#a0a0a0"];
+    Q100 -- Q001 [label="e ↔ m"
+                 ,color="#a0a0a0"
+                 ,fontcolor="#a0a0a0"];
+    Q110 -- Q011 [label="e ↔ m"
+                 ,color="#a0a0a0"
+                 ,fontcolor="#a0a0a0"];
+    Q001 -- Q110 [label="en ↔ m"
+                 ,color="#bf7878"
+                 ,fontcolor="#bf7878"];
+    Q100 -- Q011 [label="e ↔ nm"
+                 ,color="#7e2f8e"
+                 ,fontcolor="#7e2f8e"];
+    Q010 -- Q110 [label="n=1 ⇒ ¬e"
+                 ,style=dashed
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q111 -- Q011 [label="n=1 ⇒ ¬e"
+                 ,style=dashed
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q000 -- Q100 [label="n=0 ⇒ ¬e"
+                 ,style=dotted
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q101 -- Q001 [label="n=0 ⇒ ¬e"
+                 ,style=dotted
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q110 -- Q100 [label="e=1 ⇒ ¬n"
+                 ,style=dashed
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q111 -- Q101 [label="e=1 ⇒ ¬n"
+                 ,style=dashed
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q000 -- Q010 [label="e=0 ⇒ ¬n"
+                 ,style=dotted
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q001 -- Q011 [label="e=0 ⇒ ¬n"
+                 ,style=dotted
+                 ,color="#000000"
+                 ,fontcolor="#000000"];
+    Q110 -- Q111 [label="e=1 ⇒ ¬m"
+                 ,style=dashed
+                 ,color="#a0a0a0"
+                 ,fontcolor="#a0a0a0"];
+    Q101 -- Q100 [label="e=1 ⇒ ¬m"
+                 ,style=dashed
+                 ,color="#a0a0a0"
+                 ,fontcolor="#a0a0a0"];
+    Q111 -- Q011 [label="m=1 ⇒ ¬e"
+                 ,style=dashed
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+    Q101 -- Q001 [label="m=1 ⇒ ¬e"
+                 ,style=dashed
+                 ,color="#ffbc4c"
+                 ,fontcolor="#ffbc4c"];
+}
