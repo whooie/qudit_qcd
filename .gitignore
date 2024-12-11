@@ -1,4 +1,5 @@
 **/.stack-work/*
+**/target/*
 **.png
 **.svg
 **.pdf
