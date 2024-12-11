@@ -1,0 +1,22 @@
+[package]
+name = "measurement"
+version = "0.1.0"
+authors = [ "whooie <wcwhuie@gmail.com>",]
+edition = "2021"
+
+[dependencies]
+rand = "*"
+thiserror = "*"
+anyhow = "*"
+
+[lib]
+path = "lib/lib.rs"
+name = "lib"
+
+[[bin]]
+path = "src/main.rs"
+name = "main"
+
+[profile.release]
+lto = true
+panic = "abort"
